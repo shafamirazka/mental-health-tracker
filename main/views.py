@@ -1,4 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect   
+from main.forms import MoodEntryForm
+from main.models import MoodEntry
+from django.http import HttpResponse
+from django.core import serializers
 
 # from django.shortcuts import render berguna untuk mengimpor fungsi render dari modul django.shortcuts.
 # Fungsi render akan digunakan untuk render tampilan HTML dengan menggunakan data yang diberikan.
@@ -6,26 +10,42 @@ from django.shortcuts import render
 # Create your views here.
 
 def show_main(request):
+    mood_entries = MoodEntry.objects.all()
+
     context = {
-        'npm' : '2306214025',
         'name': 'Shafa Amira Azka',
-        'class': 'PBP B'
+        'class': 'PBP E',
+        'npm': '2306214025',
+        'mood_entries': mood_entries
     }
 
     return render(request, "main.html", context)
 
+def create_mood_entry(request):
+    form = MoodEntryForm(request.POST or None)
 
-# Penjelasan Kode:
+    if form.is_valid() and request.method == "POST":
+        form.save()
+        return redirect('main:show_main')
 
-# Potongan kode di atas mendeklarasikan fungsi show_main, yang menerima parameter request. Fungsi ini akan mengatur permintaan HTTP dan mengembalikan tampilan yang sesuai.
+    context = {'form': form}
+    return render(request, "create_mood_entry.html", context)
 
-# context adalah dictionary yang berisi data untuk dikirimkan ke tampilan. Pada saat ini, terdapat tiga data yang disertakan, yaitu:
+def show_xml(request):
+    data = MoodEntry.objects.all()
+    return HttpResponse(serializers.serialize("xml", data), content_type="application/xml")
 
-# npm: Data npm-mu.
-# name: Data namamu.
-# class: Data kelasmu.
-# return render(request, "main.html", context) berguna untuk me-render tampilan main.html dengan menggunakan fungsi render. Fungsi render mengambil tiga argumen:
+def show_json(request):
+    data = MoodEntry.objects.all()
+    return HttpResponse(serializers.serialize("json", data), content_type="application/json")
 
-# request: Ini adalah objek permintaan HTTP yang dikirim oleh pengguna.
-# main.html: Ini adalah nama berkas template yang akan digunakan untuk me-render tampilan.
-# context: Ini adalah dictionary yang berisi data yang akan diteruskan ke tampilan untuk digunakan dalam penampilan dinamis.
+def show_xml_by_id(request, id):
+    data = MoodEntry.objects.filter(pk=id)
+    return HttpResponse(serializers.serialize("xml", data), content_type="application/xml")
+
+def show_json_by_id(request, id):
+    data = MoodEntry.objects.filter(pk=id)
+    return HttpResponse(serializers.serialize("json", data), content_type="application/json")
+
+
+
